@@ -15,6 +15,6 @@
       "includeFiles": "server/**"
     }
   },
-  "buildCommand": "npx expo export --platform web",
+  "buildCommand": "mkdir -p node_modules/react-native-css-interop/.cache && npx expo export --platform web",
   "outputDirectory": "dist"
 }
