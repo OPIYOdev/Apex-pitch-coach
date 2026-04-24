@@ -1,8 +1,13 @@
 import axios from "axios";
 import FormData from "form-data";
 import { Readable } from "stream";
+import * as dotenv from "dotenv";
+import path from "path";
 
-const GROK_API_URL = process.env.GROK_API_URL || "https://api.x.ai/v1";
+// Load .env for local testing
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
+const GROK_API_URL = process.env.GROK_API_URL || "https://api.groq.com/openai/v1";
 const GROK_API_KEY = process.env.GROK_API_KEY;
 
 if (!GROK_API_KEY) {
@@ -43,7 +48,7 @@ export async function callGrokAPI(
     const response = await axios.post(
       `${GROK_API_URL}/chat/completions`,
       {
-        model: "grok-2",
+        model: "llama-3.3-70b-versatile",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
@@ -91,7 +96,7 @@ export async function transcribeAudio(audioBlob: Buffer): Promise<string | null>
     // Use FormData with Node.js streams
     const form = new FormData();
     form.append("file", Readable.from(audioBlob), { filename: "audio.wav", contentType: "audio/wav" });
-    form.append("model", "whisper-1");
+    form.append("model", "whisper-large-v3-turbo");
 
     const response = await axios.post(
       `${GROK_API_URL}/audio/transcriptions`,
@@ -123,7 +128,7 @@ export async function synthesizeSpeech(text: string): Promise<Buffer | null> {
     const response = await axios.post(
       `${GROK_API_URL}/audio/speech`,
       {
-        model: "grok-2",
+        model: "llama-3.3-70b-versatile",
         input: text,
         voice: "nova",
       },
