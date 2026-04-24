@@ -39,6 +39,18 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, timestamp: Date.now(), env: "vercel" });
 });
 
+// Handle M-Pesa callback separately
+app.post("/api/mpesa/callback", async (req, res) => {
+  try {
+    const caller = appRouter.createCaller({ req, res, user: null });
+    const result = await caller.mpesa.callback(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error("M-Pesa callback error:", error);
+    res.status(500).json({ ResultCode: 1, ResultDesc: "Internal Error" });
+  }
+});
+
 app.use(
   "/api/trpc",
   createExpressMiddleware({

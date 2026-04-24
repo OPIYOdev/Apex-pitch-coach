@@ -5,28 +5,56 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TextInput,
+  Modal,
 } from "react-native";
+import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { trpc } from "@/lib/trpc";
 
 export default function TokensScreen() {
+  const [phoneNumber, setPhoneNumber] = useState("254");
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
   // Live data from the server
   const profileQuery = trpc.user.profile.useQuery();
   const packagesQuery = trpc.user.tokenPackages.useQuery();
   const transactionsQuery = trpc.user.transactions.useQuery({ limit: 10 });
 
+  const stkPushMutation = trpc.mpesa.initiateStkPush.useMutation({
+    onSuccess: (data) => {
+      setModalVisible(false);
+      Alert.alert("STK Push Sent", data.message);
+      // Start polling for transaction status or just refresh after a delay
+      setTimeout(() => {
+        transactionsQuery.refetch();
+        profileQuery.refetch();
+      }, 15000); // Wait 15s for callback processing
+    },
+    onError: (err) => {
+      Alert.alert("Payment Failed", err.message);
+    },
+  });
+
   const tokens = profileQuery.data?.tokens ?? 0;
   const packages = packagesQuery.data ?? [];
   const transactions = transactionsQuery.data ?? [];
 
-  const handlePurchase = (pkg: { id: string; name: string | null; tokens: number | null; priceKES: string | null }) => {
-    // M-Pesa STK Push is initiated server-side via /api/payment/initiate-mpesa.
-    // The frontend will need a phone number input and a tRPC mutation once
-    // the payment flow is fully wired. For now we surface a clear placeholder.
-    Alert.alert(
-      "Buy Tokens",
-      `M-Pesa payment for "${pkg.name}" (${pkg.tokens} tokens, KES ${pkg.priceKES}) will be implemented in the next phase.`,
-    );
+  const handlePurchase = (pkg: any) => {
+    setSelectedPkg(pkg);
+    setModalVisible(true);
+  };
+
+  const confirmPayment = () => {
+    if (!phoneNumber.match(/^254\d{9}$/)) {
+      Alert.alert("Invalid Number", "Please enter a valid phone number in format 2547XXXXXXXX");
+      return;
+    }
+    stkPushMutation.mutate({
+      packageId: selectedPkg.id,
+      phoneNumber,
+    });
   };
 
   return (
@@ -84,32 +112,6 @@ export default function TokensScreen() {
             )}
           </View>
 
-          {/* Usage Breakdown */}
-          <View className="gap-2">
-            <Text className="text-lg font-bold text-foreground">Token Usage</Text>
-            <View className="gap-2">
-              {[
-                { icon: "🎤", label: "Pitch Analysis", cost: "5 tokens per analysis", amount: 5 },
-                { icon: "💬", label: "Coach Chat", cost: "1 token per message", amount: 1 },
-                { icon: "🎙️", label: "Voice Session", cost: "3 tokens per session", amount: 3 },
-              ].map((item) => (
-                <View
-                  key={item.label}
-                  className="p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between"
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-lg">{item.icon}</Text>
-                    <View>
-                      <Text className="text-sm font-semibold text-foreground">{item.label}</Text>
-                      <Text className="text-xs text-muted">{item.cost}</Text>
-                    </View>
-                  </View>
-                  <Text className="text-sm font-bold text-foreground">{item.amount}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
           {/* Transaction History */}
           <View className="gap-2">
             <Text className="text-lg font-bold text-foreground">Recent Activity</Text>
@@ -132,30 +134,73 @@ export default function TokensScreen() {
                         {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : ""}
                       </Text>
                     </View>
-                    <Text
-                      className={`text-sm font-bold ${
-                        tx.type === "purchase" ? "text-success" : "text-error"
-                      }`}
-                    >
-                      {tx.type === "purchase" ? "+" : "-"}
-                      {tx.amount}
-                    </Text>
+                    <View className="items-end">
+                      <Text
+                        className={`text-sm font-bold ${
+                          tx.type === "purchase" ? "text-success" : "text-error"
+                        }`}
+                      >
+                        {tx.type === "purchase" ? "+" : "-"}
+                        {tx.amount}
+                      </Text>
+                      <Text className="text-[10px] text-muted capitalize">{tx.mpesaStatus}</Text>
+                    </View>
                   </View>
                 ))}
               </View>
             )}
           </View>
-
-          {/* Founder Note */}
-          <View className="p-3 bg-primary bg-opacity-10 rounded-lg">
-            <Text className="text-xs text-primary font-semibold mb-1">💡 Founder Access</Text>
-            <Text className="text-xs text-foreground">
-              Founders get unlimited free tokens. Configure M-Pesa credentials via environment
-              variables to receive payments directly.
-            </Text>
-          </View>
         </View>
       </ScrollView>
+
+      {/* Payment Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 p-4">
+          <View className="bg-surface w-full max-w-md p-6 rounded-2xl gap-4">
+            <Text className="text-xl font-bold text-foreground">Confirm Payment</Text>
+            <Text className="text-sm text-muted">
+              You are buying {selectedPkg?.tokens} tokens for KES {selectedPkg?.priceKES}.
+              Enter your M-Pesa number to receive the STK prompt.
+            </Text>
+            
+            <View className="gap-2">
+              <Text className="text-sm font-semibold text-foreground">M-Pesa Number</Text>
+              <TextInput
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                placeholder="2547XXXXXXXX"
+                keyboardType="phone-pad"
+                className="border border-border rounded-lg p-3 text-foreground bg-background"
+              />
+            </View>
+
+            <View className="flex-row gap-3 mt-2">
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="flex-1 p-3 border border-border rounded-lg items-center"
+              >
+                <Text className="text-foreground font-semibold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={confirmPayment}
+                disabled={stkPushMutation.isPending}
+                className="flex-1 p-3 bg-primary rounded-lg items-center"
+              >
+                {stkPushMutation.isPending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text className="text-white font-semibold">Pay Now</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
