@@ -46,8 +46,8 @@ export default function LevelsScreen() {
         <View className="flex-1 gap-4">
           {/* Header */}
           <View className="mb-2">
-            <Text className="text-2xl font-bold text-foreground">Skill Progression</Text>
-            <Text className="text-sm text-muted">Master pitch coaching through 5 levels</Text>
+            <Text className="text-2xl font-bold text-foreground uppercase tracking-tighter">The Ascent</Text>
+            <Text className="text-sm text-muted italic">"From Rookie to Elite. There is no middle ground."</Text>
           </View>
 
           {/* Level Cards */}
@@ -59,27 +59,26 @@ export default function LevelsScreen() {
                 <TouchableOpacity
                   key={level.n}
                   onPress={() => setSelectedLevel(level.n)}
-                  className={`p-4 rounded-lg border-2 ${
+                  className={`p-4 rounded-xl border-2 ${
                     selectedLevel === level.n
-                      ? "border-primary bg-primary bg-opacity-10"
+                      ? "border-primary bg-primary/5"
                       : "border-border bg-surface"
-                  } ${level.locked ? "opacity-60" : ""}`}
+                  } ${level.locked ? "opacity-40" : ""}`}
                 >
                   <View className="flex-row items-center justify-between mb-2">
                     <View className="flex-row items-center gap-3">
                       <View
-                        className="w-12 h-12 rounded-full items-center justify-center"
+                        className="w-10 h-10 rounded-full items-center justify-center"
                         style={{
                           backgroundColor: level.locked ? colors.muted : colors.primary,
-                          opacity: level.locked ? 0.5 : 1,
                         }}
                       >
-                        <Text className="text-lg font-bold text-white">{level.n}</Text>
+                        <Text className="text-sm font-black text-white">{level.n}</Text>
                       </View>
                       <View>
-                        <Text className="text-lg font-bold text-foreground">{level.name}</Text>
-                        <Text className="text-xs text-muted">
-                          {level.locked ? "Locked" : "Unlocked"}
+                        <Text className="text-base font-black text-foreground uppercase tracking-tight">{level.name}</Text>
+                        <Text className="text-[10px] font-bold text-muted uppercase">
+                          {level.locked ? "RESTRICTED" : "ACTIVE STATUS"}
                         </Text>
                       </View>
                     </View>
@@ -88,14 +87,14 @@ export default function LevelsScreen() {
 
                   {/* XP Progress */}
                   {!level.locked && (
-                    <View className="gap-1">
+                    <View className="gap-1 mt-1">
                       <View className="flex-row items-center justify-between">
-                        <Text className="text-xs text-muted">XP Progress</Text>
-                        <Text className="text-xs font-semibold text-foreground">
+                        <Text className="text-[9px] font-bold text-muted uppercase">ELITE XP</Text>
+                        <Text className="text-[9px] font-bold text-foreground">
                           {level.xpCurrent} / {level.xpNeeded}
                         </Text>
                       </View>
-                      <View className="w-full h-2 bg-border rounded-full overflow-hidden">
+                      <View className="w-full h-1.5 bg-border rounded-full overflow-hidden">
                         <View
                           className="h-full bg-primary"
                           style={{
@@ -112,26 +111,37 @@ export default function LevelsScreen() {
 
           {/* Selected Level Details */}
           {levels.length > 0 && selectedLevel && (
-            <View className="mt-4 p-4 bg-surface border border-border rounded-lg gap-3">
-              <Text className="text-lg font-bold text-foreground">
-                {levels[selectedLevel - 1]?.name} Details
-              </Text>
-              <Text className="text-sm text-foreground leading-relaxed">
+            <View className="mt-2 p-5 bg-surface border border-border rounded-2xl gap-4 shadow-sm">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-xl font-black text-foreground uppercase tracking-tighter">
+                  {levels[selectedLevel - 1]?.name}
+                </Text>
+                <View className="h-px flex-1 bg-border" />
+              </View>
+              
+              <Text className="text-sm text-foreground leading-relaxed font-medium">
                 {levels[selectedLevel - 1]?.desc}
               </Text>
+
               {!levels[selectedLevel - 1]?.locked && (
-                <View className="gap-2 pt-2">
-                  <Text className="text-sm font-semibold text-foreground">Drill Prompts</Text>
+                <View className="gap-3 pt-2">
+                  <Text className="text-xs font-black text-primary uppercase tracking-widest">ACTIVE DRILLS</Text>
                   <View className="gap-2">
                     {(DRILL_PROMPTS[selectedLevel] ?? []).map((prompt, idx) => (
-                      <TouchableOpacity
+                      <View
                         key={idx}
-                        className="p-3 bg-primary bg-opacity-10 rounded-lg"
+                        className="p-4 bg-background border border-border rounded-xl"
                       >
-                        <Text className="text-sm text-foreground">{prompt}</Text>
-                      </TouchableOpacity>
+                        <Text className="text-sm text-foreground font-medium leading-snug">"{prompt}"</Text>
+                      </View>
                     ))}
                   </View>
+                </View>
+              )}
+              
+              {levels[selectedLevel - 1]?.locked && (
+                <View className="p-4 bg-muted/10 rounded-xl items-center">
+                  <Text className="text-xs font-bold text-muted uppercase">Increase your APEX Score to unlock</Text>
                 </View>
               )}
             </View>

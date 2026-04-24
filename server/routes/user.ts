@@ -12,18 +12,18 @@ import { db } from "../db";
 import { users, tokenTransactions, tokenPackages } from "../../drizzle/schema";
 
 /** XP thresholds for each coaching level (index = level - 1) */
-const LEVEL_XP_THRESHOLDS = [0, 100, 300, 600, 900];
+const LEVEL_XP_THRESHOLDS = [100, 300, 600, 1000, 2000];
 
 /** Human-readable level names */
 const LEVEL_NAMES = ["Rookie", "Contender", "Closer", "Dealmaker", "Elite"];
 
 /** Level descriptions */
 const LEVEL_DESCRIPTIONS = [
-  "You're just starting. Goal: nail your one-liner.",
-  "You can explain what you do. Goal: make them feel the pain.",
-  "You can close a room. Goal: handle objections cold.",
-  "You move money. Goal: command the room and the terms.",
-  "You command the room. Goal: they repeat your pitch.",
+  "The Foundation. You're just starting. Goal: nail your one-liner and establish basic frame control.",
+  "The Challenger. You can explain what you do clearly. Goal: make them feel the pain and establish authority.",
+  "The Closer. You can navigate a room and handle basic objections. Goal: master the art of the high-status close.",
+  "The Dealmaker. You move money and command terms. Goal: handle any objection cold and lead the narrative.",
+  "The Elite. You command the room. Goal: deliver a pitch so clear and powerful that they repeat it back to you."
 ];
 
 export const userRouter = router({
@@ -50,7 +50,7 @@ export const userRouter = router({
 
     const { tokens, xp, level, name, email, role } = rows[0];
     const currentLevel = Math.min(Math.max(level ?? 1, 1), 5);
-    const xpNeeded = LEVEL_XP_THRESHOLDS[currentLevel] ?? 900;
+    const xpNeeded = LEVEL_XP_THRESHOLDS[currentLevel - 1] ?? 2000;
     const xpCurrent = xp ?? 0;
 
     return {
