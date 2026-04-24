@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>APEX — Elite Pitch Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#0a0a0a;--ink2:#3a3a3a;--ink3:#888;
+    --surface:#ffffff;--surface2:#f5f4f1;--surface3:#eeecea;
+    --accent:#c8432a;--accent2:#e85d3c;
+    --gold:#b8860b;--gold2:#f0c040;
+    --border:#e0ddd8;--border2:#ccc9c2;
+    --radius:10px;
+    --font-head:'Syne',sans-serif;
+    --font-body:'DM Sans',sans-serif;
+  }
+  body{font-family:var(--font-body);background:var(--surface2);color:var(--ink);min-height:100vh;font-size:14px}
+
+  /* SHELL */
+  #app{display:flex;flex-direction:column;min-height:100vh}
+  header{background:var(--ink);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .logo{font-family:var(--font-head);font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#fff}
+  .logo span{color:#e85d3c}
+  .token-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:500;cursor:pointer;transition:.2s}
+  .token-pill:hover{background:rgba(255,255,255,0.18)}
+  .token-pill .dot{width:6px;height:6px;border-radius:50%;background:#f0c040}
+  .founder-badge{font-size:10px;background:#c8432a;color:#fff;border-radius:4px;padding:2px 7px;font-family:var(--font-head);letter-spacing:.5px;font-weight:700}
+
+  /* NAV */
+  nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;overflow-x:auto}
+  nav button{font-family:var(--font-body);font-size:13px;font-weight:500;border:none;background:none;padding:14px 16px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;white-space:nowrap;transition:.2s}
+  nav button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  nav button:hover:not(.active){color:var(--ink2)}
+
+  /* MAIN */
+  main{flex:1;padding:24px;max-width:860px;margin:0 auto;width:100%}
+
+  /* CARDS */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;margin-bottom:16px}
+  .card-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .card-title .icon{font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:8px}
+
+  /* LEVEL TRACK */
+  .level-track{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .level-chip{flex:1;min-width:100px;text-align:center;padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:.2s;background:var(--surface)}
+  .level-chip:hover:not(.locked){border-color:var(--border2)}
+  .level-chip.active{border-color:var(--accent);background:#fff5f3}
+  .level-chip.locked{opacity:.4;cursor:not-allowed}
+  .level-chip .lnum{font-family:var(--font-head);font-size:20px;font-weight:800;display:block;color:var(--ink)}
+  .level-chip.active .lnum{color:var(--accent)}
+  .level-chip .lname{font-size:11px;color:var(--ink3);display:block;margin-top:2px;font-weight:500}
+  .level-chip .lxp{font-size:10px;color:var(--ink3);display:block;margin-top:2px}
+
+  /* FORMS */
+  textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;font-family:var(--font-body);font-size:14px;line-height:1.65;resize:vertical;min-height:130px;color:var(--ink);background:var(--surface);transition:.2s;outline:none}
+  textarea:focus{border-color:var(--accent2)}
+  textarea::placeholder{color:var(--ink3)}
+  input[type=text]{border:1.5px solid var(--border);border-radius:9px;padding:10px 14px;font-family:var(--font-body);font-size:13.5px;color:var(--ink);outline:none;transition:.2s;background:var(--surface)}
+  input[type=text]:focus{border-color:var(--accent2)}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:9px;padding:10px 18px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:.18s;text-decoration:none}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent2)}
+  .btn-primary:disabled{opacity:.45;cursor:not-allowed}
+  .btn-ghost{background:var(--surface2);color:var(--ink2);border:1px solid var(--border)}
+  .btn-ghost:hover{background:var(--surface3)}
+  .btn-ghost:disabled{opacity:.45;cursor:not-allowed}
+  .btn-gold{background:var(--gold);color:#fff}
+  .btn-gold:hover{background:#9a6d08}
+
+  /* SCORE GRID */
+  .score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+  .score-cell{background:var(--surface2);border-radius:10px;padding:12px 14px}
+  .score-cell .sc-label{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+  .score-cell .sc-val{font-family:var(--font-head);font-size:24px;font-weight:800;color:var(--ink)}
+  .score-cell .sc-bar{height:3px;background:var(--border);border-radius:2px;margin-top:7px;overflow:hidden}
+  .score-cell .sc-fill{height:100%;border-radius:2px;transition:.6s}
+
+  /* FEEDBACK */
+  .verdict-box{border-left:3px solid var(--accent);background:#fff5f3;padding:14px 16px;border-radius:0 10px 10px 0;flex:1}
+  .verdict-box p{font-size:14px;font-weight:500;color:var(--ink);line-height:1.55;font-style:italic}
+  .fb-section{margin-bottom:14px}
+  .fb-label{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px}
+  .fb-text{font-size:13.5px;line-height:1.7;color:var(--ink2)}
+  .rewrite-box{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 9px 9px 0;padding:13px 15px;font-size:13.5px;line-height:1.7;color:var(--ink)}
+  .drill-box{background:#fff5f3;border:1px solid #f5c4b3;border-radius:9px;padding:13px 15px;font-size:13.5px;line-height:1.7;color:var(--ink)}
+  .nextlevel-box{background:#fffbee;border:1px solid #f0c040;border-radius:9px;padding:10px 14px;font-size:13px;color:#4a3000;line-height:1.55}
+
+  /* OVERALL SCORE RING */
+  .score-ring-outer{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .score-ring-inner{width:58px;height:58px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .ring-num{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--ink);line-height:1}
+  .ring-den{font-size:9px;color:var(--ink3);font-weight:600}
+
+  /* XP BAR */
+  .xp-bar-wrap{background:var(--border);border-radius:4px;height:5px;overflow:hidden;margin-top:7px}
+  .xp-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:.6s}
+  .lvl-desc{font-size:13px;color:var(--ink2);line-height:1.6;background:var(--surface2);border-radius:9px;padding:12px 14px;margin-bottom:16px;border-left:3px solid var(--accent)}
+
+  /* STREAK */
+  .streak-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .streak-dot{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--ink3)}
+  .streak-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
+  .streak-dot.today{background:var(--gold);border-color:var(--gold);color:#fff}
+
+  /* CHAT */
+  .chat-wrap{height:360px;overflow-y:auto;padding:4px 0;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.65;word-break:break-word}
+  .msg-apex{background:var(--surface2);border:1px solid var(--border);color:var(--ink);align-self:flex-start;border-radius:4px 12px 12px 12px}
+  .msg-user{background:var(--accent);color:#fff;align-self:flex-end;border-radius:12px 4px 12px 12px}
+  .msg-name{font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:5px;opacity:.6;text-transform:uppercase}
+  .chat-input-row{display:flex;gap:8px;margin-top:12px}
+  .chat-input-row input{flex:1}
+
+  /* VOICE */
+  .rec-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:.2s;flex-shrink:0}
+  .rec-btn.idle{background:var(--accent)}
+  .rec-btn.idle:hover{background:var(--accent2)}
+  .rec-btn.rec{background:#c00;animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(200,0,0,.4)}50%{box-shadow:0 0 0 10px rgba(200,0,0,0)}}
+  .rec-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .rec-label{font-size:13px;color:var(--ink2);line-height:1.4}
+
+  /* TOKENS */
+  .token-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+  .tok-card{background:var(--surface2);border-radius:10px;padding:16px;border:1.5px solid var(--border)}
+  .tok-card.highlight{border-color:var(--gold);background:#fffbee}
+  .tok-amount{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--ink);margin-bottom:2px}
+  .tok-label{font-size:11px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .tok-price{font-size:22px;font-weight:700;font-family:var(--font-head);color:var(--gold);margin:8px 0 4px}
+  .tok-sub{font-size:11px;color:var(--ink3);margin-bottom:12px}
+  .history-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+  .history-row:last-child{border-bottom:none}
+  .tx-type{font-weight:600;color:var(--ink);font-size:13px}
+  .tx-neg{color:var(--accent);font-weight:700;font-size:13px}
+  .tx-pos{color:#2a7a2a;font-weight:700;font-size:13px}
+  .tx-date{font-size:11px;color:var(--ink3);margin-top:1px}
+  .voice-hint{font-size:12.5px;color:var(--ink2);background:var(--surface2);border-radius:9px;padding:12px 14px;line-height:1.65;margin-bottom:10px;border-left:3px solid var(--border2)}
+  .voice-hint a{color:var(--accent);text-decoration:none;font-weight:600}
+  .voice-hint a:hover{text-decoration:underline}
+
+  /* TIPS */
+  .tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tip-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:16px;cursor:default;transition:.18s}
+  .tip-card:hover{border-color:var(--border2);background:var(--surface2)}
+  .tip-icon{font-size:22px;margin-bottom:8px}
+  .tip-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--ink);margin-bottom:5px}
+  .tip-body{font-size:12.5px;color:var(--ink3);line-height:1.6}
+
+  /* PLAYBOOK */
+  .pb-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+  .pb-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:var(--surface);transition:.2s;user-select:none}
+  .pb-header:hover{background:var(--surface2)}
+  .pb-header.open{background:#fff5f3}
+  .pb-header-left{display:flex;align-items:center;gap:10px}
+  .pb-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--ink)}
+  .pb-body{padding:14px 16px 18px;font-size:13.5px;line-height:1.75;color:var(--ink2);background:var(--surface);border-top:1px solid var(--border);display:none}
+  .pb-body.open{display:block}
+
+  /* LOADING */
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  .spin-dark{display:inline-block;width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-card{text-align:center;padding:48px;color:var(--ink3);font-size:13px}
+
+  /* MISC */
+  .sep{height:1px;background:var(--border);margin:18px 0}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
+  .tag-red{background:#fee;color:var(--accent)}
+  .tag-green{background:#eefbe9;color:#2a6a2a}
+  .tag-gold{background:#fffbee;color:var(--gold);border:1px solid #e8d070}
+  .score-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px}
+  .empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:13px;line-height:1.8}
+  .empty .big{font-size:38px;margin-bottom:12px}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal h2{font-family:var(--font-head);font-size:20px;font-weight:800;margin-bottom:8px}
+  .modal p{font-size:13.5px;color:var(--ink2);line-height:1.65;margin-bottom:20px}
+  .modal-row{display:flex;gap:10px;justify-content:flex-end}
+
+  @media(max-width:640px){
+    .score-grid{grid-template-columns:1fr 1fr}
+    .token-grid{grid-template-columns:1fr}
+    .tips-grid{grid-template-columns:1fr}
+    main{padding:14px}
+    header{padding:0 16px}
+    nav{padding:0 12px}
+    nav button{padding:12px 12px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <header>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo">APEX<span>.</span></div>
+      <div class="founder-badge">FOUNDER</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div id="xp-display" style="font-size:12px;color:rgba(255,255,255,.5)">0 XP · L1</div>
+      <div class="token-pill" onclick="switchTab('tokens')">
+        <div class="dot"></div>
+        <span id="header-tokens">Unlimited</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav>
+    <button class="active" onclick="switchTab('arena')">Arena</button>
+    <button onclick="switchTab('coach')">Coach Chat</button>
+    <button onclick="switchTab('drills')">Drills</button>
+    <button onclick="switchTab('playbook')">Playbook</button>
+    <button onclick="switchTab('history')">History</button>
+    <button onclick="switchTab('tokens')">Tokens</button>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- ═══ ARENA ═══ -->
+    <div id="tab-arena">
+      <!-- Level selector -->
+      <div class="card">
+        <div class="card-title"><div class="icon">🎯</div>Training Level</div>
+        <div class="level-track" id="level-track"></div>
+        <div class="lvl-desc" id="level-desc"></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:5px">
+          <span id="xp-label-left">Level 1 — 0 XP</span>
+          <span id="xp-label-right">100 XP to Contender</span>
+        </div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+      </div>
+
+      <!-- Pitch input -->
+      <div class="card">
+        <div class="card-title"><div class="icon">✍️</div>Your Pitch</div>
+        <div class="rec-row">
+          <button class="rec-btn idle" id="rec-btn" onclick="toggleRecording()">🎙</button>
+          <div class="rec-label" id="rec-label">Tap mic to speak your pitch, or type below</div>
+        </div>
+        <div id="transcript-note" style="font-size:12px;color:#888;margin-bottom:8px;font-style:italic;display:none">
+          Transcript captured — review and edit below
+        </div>
+        <textarea id="pitch-input" placeholder='Write or speak your pitch here — be as raw or polished as you are right now.'></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:7px;flex-wrap:wrap" id="prompt-btns"></div>
+          <button class="btn btn-primary" id="analyze-btn" onclick="analyzePitch()">Get APEX Feedback</button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="card loading-card" id="loading-card" style="display:none">
+        <div class="spin-dark" style="margin:0 auto 14px"></div>
+        APEX is dissecting your pitch…
+      </div>
+
+      <!-- Feedback -->
+      <div class="card" id="feedback-card" style="display:none">
+        <div class="card-title"><div class="icon">📊</div>APEX Verdict</div>
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:18px">
+          <div id="score-ring" class="score-ring-outer">
+            <div class="score-ring-inner">
+              <div class="ring-num" id="ring-num">0</div>
+              <div class="ring-den">/10</div>
+            </div>
+          </div>
+          <div class="verdict-box"><p id="verdict-text"></p></div>
+        </div>
+        <div class="score-grid" id="score-grid"></div>
+        <div class="sep"></div>
+        <div class="fb-section">
+          <div class="fb-label">✅ What Landed</div>
+          <div class="fb-text" id="landed-text"></div>
+        </div>
+        <div class="fb-section">
+          <div class="fb-label">🔪 What Killed It</div>
+          <div class="fb-text" id="killed-text"></div>
+        </div>
+        <div class="sep"></div>
+        <div class="fb-section">
+          <div class="fb-label">✏️ Elite Rewrite</div>
+          <div class="rewrite-box" id="rewrite-text"></div>
+        </div>
+        <div class="fb-section" style="margin-top:14px">
+          <div class="fb-label">🏋️ Drill — Do This Now</div>
+          <div class="drill-box" id="drill-text"></div>
+        </div>
+        <div class="nextlevel-box" id="nextlevel-box" style="margin-top:14px;display:none">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;color:#7a5a00">🔺 To The Next Level</span>
+          <span id="nextlevel-text"></span>
+        </div>
+        <div style="margin-top:14px;text-align:right;font-size:12px;color:#888" id="xp-earned-label"></div>
+      </div>
+    </div>
+
+    <!-- ═══ COACH CHAT ═══ -->
+    <div id="tab-coach" style="display:none">
+      <div class="card">
+        <div class="card-title"><div class="icon">💬</div>Ask APEX Anything</div>
+        <div style="font-size:13px;color:#888;margin-bottom:14px;line-height:1.6">
+          Your personal pitch coach. Ask about structure, hooks, closes, specific pitches, industries, objections — anything.
+        </div>
+        <div class="chat-wrap" id="chat-messages">
+          <div class="msg msg-apex">
+            <div class="msg-name">APEX</div>
+            Ready when you are. What do you want to work on — your opening hook, the problem framing, the ask, or something else?
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Ask APEX anything about pitching…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary" id="chat-send-btn" onclick="sendChat()">Send</button>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px">1 token per message · Founder: free</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="icon">⚡</div>Quick Topics</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${["How do I open with a hook?","What's the perfect pitch structure?","How long should my pitch be?","How do I handle 'why you'?","Make me sound more confident","How do I pitch to investors vs customers?","What's the YC 1-sentence formula?","How do I end with a powerful ask?"].map(q=>`<button class="btn btn-ghost" style="font-size:12px" onclick="quickChat('${q.replace(/'/g,"\\'")}')">${q}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DRILLS ═══ -->
+    <div id="tab-drills" style="display:none">
+      <div class="card">
+        <div class="card-title"><div class="icon">🏋️</div>Progressive Drills</div>
+        <div style="font-size:13px;color:#888;margin-bottom:18px;line-height:1.6">
+          Unlock drills as you level up. Complete them in the Arena for XP. Repeat until the response is automatic.
+        </div>
+        <div id="drills-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="icon">📅</div>Daily Streak</div>
+        <div class="streak-bar" id="streak-bar"></div>
+        <div style="font-size:13px;color:#888">Pitch daily to level up faster — consistency beats intensity.</div>
+      </div>
+    </div>
+
+    <!-- ═══ PLAYBOOK ═══ -->
+    <div id="tab-playbook" style="display:none">
+      <div class="card">
+        <div class="card-title"><div class="icon">📚</div>The APEX Playbook</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px;line-height:1.6">
+          Distilled from the world's best pitchers. Tap any section to expand the full coaching note.
+        </div>
+        <div id="playbook-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="icon">⚡</div>Quick Principles</div>
+        <div class="tips-grid" id="tips-grid"></div>
+      </div>
+    </div>
+
+    <!-- ═══ HISTORY ═══ -->
+    <div id="tab-history" style="display:none">
+      <div id="history-list">
+        <div class="card">
+          <div class="empty">
+            <div class="big">📭</div>
+            No pitches analyzed yet.<br>
+            Head to the Arena, submit your first pitch,<br>and your history will appear here.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TOKENS ═══ -->
+    <div id="tab-tokens" style="display:none">
+      <div class="card">
+        <div class="card-title"><div class="icon">💎</div>Your Access</div>
+        <div style="background:linear-gradient(135deg,#0a0a0a,#2c2c2c);color:#fff;border-radius:12px;padding:20px 22px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:5px">Founder Access</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.55)">Unlimited · always free · you built this</div>
+          </div>
+          <div style="font-size:32px">👑</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="tok-card">
+            <div class="tok-label">Token Balance</div>
+            <div class="tok-amount" id="token-balance-display">∞</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Unlimited for founder</div>
+          </div>
+          <div class="tok-card">
+            <div class="tok-label">Usage Costs</div>
+            <div style="font-size:12.5px;color:#3a3a3a;margin-top:6px;line-height:1.8">
+              Pitch analysis: <strong>5 tokens</strong><br>
+              Coach chat: <strong>1 token/msg</strong><br>
+              Voice session: <strong>3 tokens</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">🛒</div>Token Packs (for other users)</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px;line-height:1.6">
+          Pay once, use as long as they last. No subscriptions. Tokens never expire.
+        </div>
+        <div class="token-grid">
+          <div class="tok-card">
+            <div class="tok-label">Starter</div>
+            <div class="tok-price">$4</div>
+            <div class="tok-amount">50</div>
+            <div class="tok-sub">10 pitch analyses</div>
+            <button class="btn btn-ghost" style="width:100%" onclick="buyTokens(50,'$4')">Buy Tokens</button>
+          </div>
+          <div class="tok-card highlight">
+            <div class="tag tag-gold" style="margin-bottom:8px">Most Popular</div>
+            <div class="tok-label">Builder</div>
+            <div class="tok-price">$12</div>
+            <div class="tok-amount">200</div>
+            <div class="tok-sub">40 pitch analyses</div>
+            <button class="btn btn-gold" style="width:100%" onclick="buyTokens(200,'$12')">Buy Tokens</button>
+          </div>
+          <div class="tok-card">
+            <div class="tok-label">Pro</div>
+            <div class="tok-price">$29</div>
+            <div class="tok-amount">600</div>
+            <div class="tok-sub">120 pitch analyses</div>
+            <button class="btn btn-ghost" style="width:100%" onclick="buyTokens(600,'$29')">Buy Tokens</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">📋</div>Transaction History</div>
+        <div id="tx-history">
+          <div class="history-row">
+            <div><div class="tx-type">Founder signup — unlimited access</div><div class="tx-date">Today</div></div>
+            <span class="tx-pos">∞</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">🔊</div>Voice Synthesis Integration</div>
+        <div class="voice-hint">
+          <strong>Grok / xAI voice:</strong> Replace the Web SpeechRecognition calls in <code>app.js</code> with your <a href="https://x.ai/api" target="_blank">xAI API</a> endpoint. Set model to <code>grok-2</code> with audio response format. APEX coaching text is pre-structured as coaching scripts — pipe it straight to TTS.
+        </div>
+        <div class="voice-hint">
+          <strong>Free alternatives:</strong>
+          <a href="https://elevenlabs.io" target="_blank">ElevenLabs</a> (free tier, best quality) ·
+          <a href="https://cloud.google.com/text-to-speech" target="_blank">Google TTS</a> (free tier) ·
+          Browser Web Speech API (zero setup, already wired — works in Chrome &amp; Edge now).
+        </div>
+        <div class="voice-hint">
+          <strong>To add Stripe/Paystack payments:</strong> See <code>README.md</code> — the token purchase buttons are pre-wired to call <code>buyTokens(amount, price)</code>. Replace the <code>alert()</code> stub with your payment provider's checkout session call.
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- BUY MODAL -->
+<div class="modal-overlay" id="buy-modal">
+  <div class="modal">
+    <h2>Not enough tokens</h2>
+    <p>You need more tokens to continue. Top up your balance — packs start at $4 and never expire.</p>
+    <div class="modal-row">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="closeModal();switchTab('tokens')">Buy Tokens →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONFIG — replace with your own API key handling
+// ══════════════════════════════════════════════════════════
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL   = "claude-sonnet-4-20250514";
+
+// Set IS_FOUNDER = true for yourself always. Other users get IS_FOUNDER = false.
+const IS_FOUNDER = true;
+const COST_ANALYZE = 5;
+const COST_CHAT    = 1;
+const COST_VOICE   = 3;
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let tokens        = IS_FOUNDER ? Infinity : 50;
+let xp            = 0;
+let currentLevel  = 0;
+let selectedLevel = 0;
+let pitchHistory  = [];
+let streak        = [true,true,true,false,false,false,false];
+let recording     = false;
+let recTimer      = null;
+let recSeconds    = 0;
+let recognition   = null;
+let chatMessages  = [];
+
+// ══════════════════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════════════════
+const LEVELS = [
+  {n:1, name:"Rookie",    xpNeeded:0,   desc:"You freeze up, mumble, or ramble. Most people start here. Goal: one clear sentence that explains exactly what you do.",
+   prompts:["Explain what your startup does in 3 sentences","Pitch your idea to a complete stranger at a coffee shop","Describe the problem you're solving and who it hurts"]},
+  {n:2, name:"Contender", xpNeeded:100, desc:"You can explain your idea, but it doesn't make people lean in. Goal: hook them within the first 10 seconds.",
+   prompts:["Open with a shocking statistic about your market","Start with 'Every day, X happens…' and build the pitch","Give a 30-second elevator pitch ending with a clear ask"]},
+  {n:3, name:"Pitcher",   xpNeeded:250, desc:"You've got structure. Now make them feel it, not just understand it. Goal: make the problem undeniable and visceral.",
+   prompts:["Tell a story about a real person experiencing the problem","Use the before/after/bridge framework","Pitch to a skeptical investor who thinks they've heard it all"]},
+  {n:4, name:"Closer",    xpNeeded:500, desc:"You can pitch. Now close. Goal: every pitch ends with a specific, compelling call to action that's impossible to ignore.",
+   prompts:["End your pitch with an irresistible ask","Handle the objection 'why now?' live inside the pitch","Compress your full pitch to exactly 60 seconds — nothing cut, everything compressed"]},
+  {n:5, name:"Elite",     xpNeeded:900, desc:"You command the room. The audience feels something. Goal: they repeat your pitch to others after you leave.",
+   prompts:["Open with 10 seconds of silence followed by one devastating fact","Pitch so simply a 10-year-old gets it AND a CEO wants to invest","Deliver a pitch that makes the audience feel they're missing out by not acting"]}
+];
+
+const SCORE_COLORS = {
+  hook:"#c8432a", clarity:"#1a6a9a", pain:"#7a3ab0",
+  solutionFit:"#2a7a2a", credibility:"#b8860b", callToAction:"#c8432a"
+};
+
+const SCORE_LABELS = {
+  hook:"Hook", clarity:"Clarity", pain:"Pain",
+  solutionFit:"Solution", credibility:"Credibility", callToAction:"CTA"
+};
+
+const PLAYBOOK = [
+  {icon:"🎣", title:"The Irresistible Hook",
+   body:"Open with one of three weapons: (1) A statistic that reframes reality — not 'big market' but '$800 billion rotting in the wrong hands.' (2) A question they haven't asked themselves: 'When was the last time you actually enjoyed a Monday morning?' (3) A story that starts mid-action — 'It was 2am and my co-founder was crying over a spreadsheet.' The hook's only job is to make walking away feel impossible."},
+  {icon:"💔", title:"Making the Pain Real",
+   body:"The difference between 'people struggle with X' and 'here's what X costs at 11pm on a Tuesday' is the difference between a nod and a sale. Pain must be felt, not understood. Use: real numbers ('$40k a year, wasted'), real humans ('my sister quit her job because of this'), real moments ('the second you realize you've been doing this wrong for 3 years'). If they don't feel a twinge of recognition, you haven't named the pain yet."},
+  {icon:"✨", title:"The Obvious Solution",
+   body:"Your solution should feel like a magic trick where the audience already sees the setup: 'Of course — why didn't anyone do this before?' This only works if you've done the pain work first. Never lead with features. Lead with transformation: before → after. 'They go from 3 hours of manual work to a 10-second click.' The bigger the pain, the more obvious the solution needs to feel. Earn the reveal."},
+  {icon:"📅", title:"Why Now — The Urgency Frame",
+   body:"Every pitch needs to answer: why is NOW the only window? Markets open and close. Technology matures. Consumer behavior shifts. The 'why now' turns your pitch from 'interesting idea' to 'irreversible opportunity.' Options: a regulatory change just created the opening, a technology just became cheap enough, consumer behavior just hit an inflection point. Make missing this moment feel like a choice they'll regret."},
+  {icon:"🏆", title:"Credibility Without Arrogance",
+   body:"Proof beats promise every time. One real traction number beats a thousand future projections. One real customer quote beats a complete feature list. If you have early traction, lead with it. If you don't, lead with your relevant obsession — 'I've spent 5 years living this exact problem, which is why I know what others miss.' Never fake credibility. Earned, specific credibility compounds. Exaggerated credibility collapses everything."},
+  {icon:"🎯", title:"The Perfect Close",
+   body:"The close is specific, time-bounded, and singular. Not 'we'd love to work together' but 'I'm asking for a 30-minute follow-up this week — are you a Thursday or Friday person?' Not 'reach out if interested' but 'I have 3 pilot slots open for Q1 — who do you know that should be in one?' The ask tells people exactly what to do next. The best closes feel effortless to say yes to and slightly uncomfortable to say no to."},
+  {icon:"⏱️", title:"The 3 Pitch Lengths",
+   body:"30 seconds (elevator): Problem → solution in one line → one proof point → ask. 3 minutes (meeting): Hook → pain story → solution → why you → traction → ask. 10 minutes (pitch deck): Everything above, plus market size, business model, roadmap, team, and a crisp close. Most people practice the 10-minute version. Elite pitchers master the 30-second version first — it forces the essential truth of your idea to survive maximum compression."},
+  {icon:"🎭", title:"Voice, Body & Silence",
+   body:"Your body delivers a second pitch while your words deliver the first. Slow down — most people speak 30% faster when nervous, which reads as uncertainty. Pause after your most important line — silence amplifies. Stand still — moving while talking makes you look unconvinced. Eye contact: pick one person, finish a complete thought, then move to another. Hands above the waist, never in pockets. Record yourself — you'll see it in seconds. What you see is what the audience feels."},
+];
+
+const QUICK_TIPS = [
+  {icon:"⚡", title:"The 5-second hook", body:"You have 5 seconds before minds wander. Start with a fact, question, or story that makes them need to keep listening."},
+  {icon:"🎯", title:"One job, one message", body:"Your pitch should answer one question: 'Why should I care right now?' Every word that doesn't serve that answer is a word that kills your pitch."},
+  {icon:"😤", title:"Make them feel the pain", body:"Don't say '40% of SMBs struggle with invoicing.' Say 'Imagine chasing payment for work you did a month ago, on a Sunday night.' Same fact. Opposite impact."},
+  {icon:"🔑", title:"The credibility ladder", body:"Proof beats promise every time. Traction, a name customer, a shocking early stat — even one real number from the real world makes everything else believable."},
+  {icon:"📣", title:"Earn the ask", body:"The CTA only lands if the pain is real and the solution feels obvious. If you're asking before they're nodding, you're asking too early."},
+  {icon:"🪞", title:"The mirror test", body:"Record yourself. Watch it back with sound off. Your body is either confirming or killing your message. Elite pitchers know their body is part of the pitch."},
+];
+
+// ══════════════════════════════════════════════════════════
+//  SYSTEM PROMPTS
+// ══════════════════════════════════════════════════════════
+const COACH_SYSTEM = `You are APEX — an elite pitch coach synthesized from the world's greatest communicators:
+• Steve Jobs: theatrical reveals, obsessive simplicity, emotional resonance
+• Simon Sinek: Start with Why, leading with purpose over product
+• Guy Kawasaki: brutal 10/20/30 rule — conciseness is respect
+• Y Combinator partners: traction-first, "what do you do" clarity, why-now urgency
+• TED's finest: story-first structure, personal stakes, unexpected reframing data
+• Warren Buffett: if you can't explain it simply, you don't understand it
+• Brené Brown: vulnerability creates real connection; authenticity beats performance
+
+Evaluate pitches on six dimensions (0–10 each):
+• HOOK — Does the opening create genuine urgency or irresistible curiosity in 5 seconds?
+• CLARITY — Can a complete stranger understand this in under 10 seconds?
+• PAIN — Does the audience FEEL the problem in their gut, not just understand it intellectually?
+• SOLUTION FIT — Is the solution so obviously right it makes you nod before they finish?
+• CREDIBILITY — Why believe this person or idea? Proof, traction, or earned authority?
+• CALL TO ACTION — Is there a clear, compelling, specific next step the audience can take now?
+
+ALWAYS respond ONLY in valid JSON — no markdown fences, no preamble, no text outside the JSON object:
+{"verdict":"One powerful memorable sentence judgment of the pitch","landed":"What specifically worked — precise and earned","killed":"The 1-2 things that hurt most — surgical, honest, no padding","scores":{"hook":0,"clarity":0,"pain":0,"solutionFit":0,"credibility":0,"callToAction":0},"overallScore":0.0,"drill":"One specific exercise to do RIGHT NOW to fix the single biggest weakness","rewrite":"Take their weakest line and rewrite it to show exactly what elite sounds like","nextLevel":"One sentence on what separates them from the next level up"}
+Calculate overallScore as the precise average of all six scores.
+Coach voice: locker room directness, not boardroom polish. Brutal where weak, generous where earned.`;
+
+const CHAT_SYSTEM = `You are APEX — an elite pitch coach synthesized from Jobs, Sinek, Kawasaki, YC's best, TED's finest, and Buffett's clarity standard.
+Be conversational, direct, specific, punchy. Max 120 words unless a detailed structural breakdown is genuinely needed. No fluff, no corporate speak.
+You master: irresistible opening hooks, the problem-solution-why now-why you structure, making audiences feel pain (not just understand it), credibility without arrogance, the perfect close, pitch psychology, adapting to investors vs customers vs executives, pre-empting objections, 30-second elevator pitches, storytelling technique, pacing and silence.`;
+
+// ══════════════════════════════════════════════════════════
+//  API
+// ══════════════════════════════════════════════════════════
+async function callClaude(systemPrompt, userMessage, isJson = false) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{role:"user", content: userMessage}]
+    })
+  });
+  const data = await res.json();
+  const text = data.content?.[0]?.text || "";
+  if (isJson) {
+    try { return JSON.parse(text.replace(/```json|```/g,"").trim()); }
+    catch { return null; }
+  }
+  return text;
+}
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+function init() {
+  renderLevelTrack();
+  renderDrills();
+  renderPlaybook();
+  renderStreak();
+  renderTips();
+  updateXPDisplay();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ══════════════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('main > div').forEach(d => d.style.display = 'none');
+  document.getElementById('tab-' + id).style.display = 'block';
+  document.querySelectorAll('nav button').forEach((b,i) => {
+    b.classList.toggle('active', ['arena','coach','drills','playbook','history','tokens'][i] === id);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  LEVEL TRACK
+// ══════════════════════════════════════════════════════════
+function renderLevelTrack() {
+  const track = document.getElementById('level-track');
+  track.innerHTML = LEVELS.map((l,i) => {
+    const locked = xp < l.xpNeeded && i > 0;
+    const active = selectedLevel === i;
+    return `<div class="level-chip ${active?'active':''} ${locked?'locked':''}"
+      onclick="${locked?'':('selectLevel('+i+')')}" >
+      <span class="lnum">${l.n}</span>
+      <span class="lname">${l.name}</span>
+      <span class="lxp">${i===0?'starter':l.xpNeeded+' XP'}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('level-desc').textContent = LEVELS[selectedLevel].desc;
+  renderPromptBtns();
+  updateXPDisplay();
+}
+
+function selectLevel(i) {
+  selectedLevel = i;
+  renderLevelTrack();
+}
+
+function renderPromptBtns() {
+  const container = document.getElementById('prompt-btns');
+  container.innerHTML = LEVELS[selectedLevel].prompts.map((p,i) =>
+    `<button class="btn btn-ghost" style="font-size:11px" onclick="usePrompt(\`${p.replace(/`/g,'\\`')}\`)">Prompt ${i+1}</button>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  XP & LEVEL
+// ══════════════════════════════════════════════════════════
+function addXP(amount) {
+  xp += amount;
+  for (let i = LEVELS.length-1; i >= 0; i--) {
+    if (xp >= LEVELS[i].xpNeeded) { currentLevel = i; break; }
+  }
+  updateXPDisplay();
+  renderLevelTrack();
+  renderDrills();
+}
+
+function updateXPDisplay() {
+  const cur = LEVELS[currentLevel];
+  const next = LEVELS[Math.min(currentLevel+1, LEVELS.length-1)];
+  const xpInLevel = xp - cur.xpNeeded;
+  const xpNeeded  = next.xpNeeded - cur.xpNeeded;
+  const pct = currentLevel === LEVELS.length-1 ? 100 : Math.min((xpInLevel/xpNeeded)*100,100);
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('xp-label-left').textContent = `Level ${cur.n} — ${xp} XP`;
+  document.getElementById('xp-label-right').textContent = currentLevel < LEVELS.length-1
+    ? `${next.xpNeeded - xp} XP to ${next.name}` : 'MAX LEVEL';
+  document.getElementById('xp-display').textContent = `${xp} XP · L${currentLevel+1}`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  VOICE RECORDING
+// ══════════════════════════════════════════════════════════
+function toggleRecording() {
+  if (recording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  recording = true;
+  recSeconds = 0;
+  document.getElementById('rec-btn').className = 'rec-btn rec';
+  document.getElementById('rec-btn').textContent = '⏹';
+  recTimer = setInterval(() => {
+    recSeconds++;
+    document.getElementById('rec-label').innerHTML =
+      `<span style="color:#c00;font-weight:600">Recording… ${recSeconds}s — speak your pitch clearly</span>`;
+  }, 1000);
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.onresult = (e) => {
+      let final = '';
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+      }
+      if (final) {
+        document.getElementById('pitch-input').value = final;
+        document.getElementById('transcript-note').style.display = 'block';
+      }
+    };
+    recognition.onerror = () => stopRecording();
+    recognition.start();
+  } else {
+    // Fallback for non-Chrome browsers
+    setTimeout(() => {
+      stopRecording();
+      document.getElementById('pitch-input').value =
+        '[Voice input: Web Speech API is available in Chrome & Edge. ' +
+        'For Grok voice, replace this section with xAI API calls as described in the Tokens tab.]';
+    }, 3000);
+  }
+}
+
+function stopRecording() {
+  recording = false;
+  clearInterval(recTimer);
+  document.getElementById('rec-btn').className = 'rec-btn idle';
+  document.getElementById('rec-btn').textContent = '🎙';
+  document.getElementById('rec-label').textContent = 'Tap mic to speak your pitch, or type below';
+  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+}
+
+// ══════════════════════════════════════════════════════════
+//  ANALYZE PITCH
+// ══════════════════════════════════════════════════════════
+async function analyzePitch() {
+  const text = document.getElementById('pitch-input').value.trim();
+  if (!text) return;
+  if (!IS_FOUNDER && tokens < COST_ANALYZE) { openModal(); return; }
+
+  document.getElementById('loading-card').style.display = 'block';
+  document.getElementById('feedback-card').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = true;
+
+  try {
+    const levelName = LEVELS[selectedLevel].name;
+    const result = await callClaude(
+      COACH_SYSTEM,
+      `Training Level: ${levelName}\n\nPitch:\n${text}`,
+      true
+    );
+
+    if (result) {
+      renderFeedback(result, text);
+      const earned = Math.round((result.overallScore || 0) * 10);
+      addXP(earned);
+      if (!IS_FOUNDER) {
+        tokens -= COST_ANALYZE;
+        addTxHistory('Pitch analysis', `-${COST_ANALYZE}`, false);
+      }
+      addHistory(text, result, earned);
+      updateStreak();
+    }
+  } catch(e) {
+    console.error('Analysis error:', e);
+  }
+
+  document.getElementById('loading-card').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = false;
+}
+
+function renderFeedback(r, originalPitch) {
+  const card = document.getElementById('feedback-card');
+  const overall = r.overallScore || 0;
+  const scores = r.scores || {};
+
+  // Ring
+  const deg = Math.round((overall/10)*360);
+  const ringColor = overall >= 7 ? '#2a7a2a' : overall >= 5 ? '#b8860b' : '#c8432a';
+  document.getElementById('score-ring').style.background =
+    `conic-gradient(${ringColor} ${deg}deg, #e0ddd8 ${deg}deg)`;
+  document.getElementById('ring-num').textContent = overall.toFixed(1);
+
+  document.getElementById('verdict-text').textContent = `"${r.verdict || ''}"`;
+  document.getElementById('landed-text').textContent = r.landed || '';
+  document.getElementById('killed-text').textContent = r.killed || '';
+  document.getElementById('rewrite-text').textContent = r.rewrite || '';
+  document.getElementById('drill-text').textContent = r.drill || '';
+
+  if (r.nextLevel) {
+    document.getElementById('nextlevel-text').textContent = r.nextLevel;
+    document.getElementById('nextlevel-box').style.display = 'block';
+  }
+
+  // Score grid
+  document.getElementById('score-grid').innerHTML = Object.entries(scores).map(([k,v]) => {
+    const color = SCORE_COLORS[k] || '#888';
+    const pct = Math.round((v/10)*100);
+    return `<div class="score-cell">
+      <div class="sc-label">${SCORE_LABELS[k]||k}</div>
+      <div class="sc-val" style="color:${color}">${v}</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+
+  const earned = Math.round(overall*10);
+  document.getElementById('xp-earned-label').textContent = `+${earned} XP earned this pitch`;
+
+  card.style.display = 'block';
+  card.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ══════════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════════
+function addHistory(pitch, result, xpEarned) {
+  pitchHistory.unshift({
+    pitch: pitch.slice(0,65) + (pitch.length>65?'…':''),
+    score: result.overallScore||0,
+    verdict: result.verdict||'',
+    scores: result.scores||{},
+    xpEarned,
+    date: 'Just now'
+  });
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!pitchHistory.length) {
+    list.innerHTML = `<div class="card"><div class="empty"><div class="big">📭</div>No pitches analyzed yet.<br>Head to the Arena and submit your first pitch.</div></div>`;
+    return;
+  }
+  list.innerHTML = pitchHistory.map(h => {
+    const deg = Math.round((h.score/10)*360);
+    const rc = h.score>=7?'#2a7a2a':h.score>=5?'#b8860b':'#c8432a';
+    const scoreBadges = Object.entries(h.scores||{}).map(([k,v]) => {
+      const c = v>=7?'#2a7a2a':v>=5?'#b8860b':'#c8432a';
+      const labels={hook:'H',clarity:'C',pain:'P',solutionFit:'SF',credibility:'Cr',callToAction:'CTA'};
+      return `<span class="score-badge" style="background:${c}18;color:${c}">${labels[k]} ${v}</span>`;
+    }).join('');
+    return `<div class="card">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="score-ring-outer" style="background:conic-gradient(${rc} ${deg}deg,#e0ddd8 ${deg}deg)">
+          <div class="score-ring-inner">
+            <div class="ring-num">${h.score.toFixed(1)}</div>
+            <div class="ring-den">/10</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:5px">${h.pitch}</div>
+          <div style="font-size:12.5px;color:#3a3a3a;font-style:italic;margin-bottom:10px;line-height:1.5">"${h.verdict}"</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            ${scoreBadges}
+            <span class="tag tag-gold" style="margin-left:auto">+${h.xpEarned} XP</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  COACH CHAT
+// ══════════════════════════════════════════════════════════
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!IS_FOUNDER && tokens < COST_CHAT) { openModal(); return; }
+
+  input.value = '';
+  appendMessage('user', msg);
+  document.getElementById('chat-send-btn').disabled = true;
+
+  if (!IS_FOUNDER) {
+    tokens -= COST_CHAT;
+    addTxHistory('Coach chat', `-${COST_CHAT}`, false);
+  }
+
+  try {
+    const histCtx = chatMessages.slice(-6)
+      .map(m => `${m.role==='user'?'You':'APEX'}: ${m.text}`)
+      .join('\n');
+    const reply = await callClaude(CHAT_SYSTEM, `${histCtx}\nYou: ${msg}`);
+    appendMessage('apex', reply || 'Try again.');
+  } catch(e) {
+    appendMessage('apex', 'Connection issue — try again in a moment.');
+  }
+
+  document.getElementById('chat-send-btn').disabled = false;
+}
+
+function appendMessage(role, text) {
+  chatMessages.push({role, text});
+  const wrap = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role==='apex'?'apex':'user'}`;
+  div.innerHTML = `<div class="msg-name">${role==='apex'?'APEX':'You'}</div>${text}`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function quickChat(q) {
+  document.getElementById('chat-input').value = q;
+  sendChat();
+  switchTab('coach');
+}
+
+// ══════════════════════════════════════════════════════════
+//  DRILLS
+// ══════════════════════════════════════════════════════════
+function renderDrills() {
+  const list = document.getElementById('drills-list');
+  list.innerHTML = LEVELS.map((l,li) => {
+    const locked = xp < l.xpNeeded && li > 0;
+    const prompts = l.prompts.map((p,pi) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+        background:${locked?'var(--surface2)':'var(--surface)'};border:1px solid var(--border);
+        border-radius:9px;margin-bottom:7px;opacity:${locked?0.45:1}">
+        <div style="font-size:13px;color:var(--ink);flex:1;margin-right:12px">${p}</div>
+        <button class="btn btn-primary" style="font-size:11px;padding:6px 12px;flex-shrink:0"
+          ${locked?'disabled':''} onclick="usePrompt(\`${p.replace(/`/g,'\\`')}\`)">Practice →</button>
+      </div>`).join('');
+    return `<div style="margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:800;
+          color:${locked?'#ccc':'#c8432a'};background:${locked?'#f5f4f1':'#fff5f3'};
+          border:1.5px solid ${locked?'#e0ddd8':'#c8432a'};border-radius:8px;padding:3px 10px">
+          L${l.n} ${l.name}</div>
+        ${locked?'<span class="tag tag-red">locked</span>':''}
+      </div>
+      ${prompts}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  PLAYBOOK
+// ══════════════════════════════════════════════════════════
+function renderPlaybook() {
+  document.getElementById('playbook-list').innerHTML = PLAYBOOK.map((p,i) => `
+    <div class="pb-item">
+      <div class="pb-header" id="pbh-${i}" onclick="togglePlaybook(${i})">
+        <div class="pb-header-left">
+          <span style="font-size:20px">${p.icon}</span>
+          <span class="pb-title">${p.title}</span>
+        </div>
+        <span style="color:#888;font-size:12px" id="pba-${i}">▼</span>
+      </div>
+      <div class="pb-body" id="pbb-${i}">
+        <p style="margin-bottom:14px">${p.body}</p>
+        <button class="btn btn-primary" style="font-size:12px"
+          onclick="usePrompt('Practice: ${p.title.replace(/'/g,"\\'")}. ')">Practice this in Arena →</button>
+      </div>
+    </div>`).join('');
+}
+
+function togglePlaybook(i) {
+  const body = document.getElementById('pbb-'+i);
+  const arrow = document.getElementById('pba-'+i);
+  const header = document.getElementById('pbh-'+i);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.textContent = isOpen ? '▼' : '▲';
+  header.classList.toggle('open', !isOpen);
+}
+
+function renderTips() {
+  document.getElementById('tips-grid').innerHTML = QUICK_TIPS.map(t => `
+    <div class="tip-card">
+      <div class="tip-icon">${t.icon}</div>
+      <div class="tip-title">${t.title}</div>
+      <div class="tip-body">${t.body}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  STREAK
+// ══════════════════════════════════════════════════════════
+function renderStreak() {
+  const days = ['M','T','W','T','F','S','S'];
+  document.getElementById('streak-bar').innerHTML = days.map((d,i) =>
+    `<div class="streak-dot ${streak[i]?(i===6?'today':'done'):''}">${d}</div>`
+  ).join('');
+}
+
+function updateStreak() {
+  streak[6] = true;
+  renderStreak();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TOKENS
+// ══════════════════════════════════════════════════════════
+function addTxHistory(type, amount, pos) {
+  const row = document.createElement('div');
+  row.className = 'history-row';
+  row.innerHTML = `<div><div class="tx-type">${type}</div><div class="tx-date">Just now</div></div>
+    <span class="${pos?'tx-pos':'tx-neg'}">${amount}</span>`;
+  const hist = document.getElementById('tx-history');
+  hist.insertBefore(row, hist.firstChild);
+}
+
+function buyTokens(amount, price) {
+  alert(`Payment integration: connect Stripe or Paystack to activate ${amount} tokens for ${price}.\n\nSee README.md for integration instructions.`);
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════
+function openModal() { document.getElementById('buy-modal').classList.add('open'); }
+function closeModal() { document.getElementById('buy-modal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════════════════
+//  UTIL
+// ══════════════════════════════════════════════════════════
+function usePrompt(p) {
+  document.getElementById('pitch-input').value = p + '\n\n';
+  switchTab('arena');
+  document.getElementById('pitch-input').focus();
+}
+
+// ══════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
