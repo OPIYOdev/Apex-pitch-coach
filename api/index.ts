@@ -65,9 +65,13 @@ app.get("/api/health", (_req, res) => {
 // Handle M-Pesa callback separately
 app.post("/api/mpesa/callback", async (req, res) => {
   try {
-    // Create a proper context for the caller
-    const ctx = await createContext({ req, res });
-    const caller = appRouter.createCaller(ctx);
+    // Use the router's createCaller with a manually constructed context.
+    // Since this is a public callback, we don't need to authenticate the user.
+    const caller = appRouter.createCaller({
+      req,
+      res,
+      user: null,
+    });
     const result = await caller.mpesa.callback(req.body);
     res.json(result);
   } catch (error) {
