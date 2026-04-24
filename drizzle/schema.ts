@@ -164,3 +164,23 @@ export const analytics = pgTable("analytics", {
 });
 
 export type Analytics = typeof analytics.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// M-Pesa Configuration
+// ---------------------------------------------------------------------------
+export const mpesaConfig = pgTable("mpesa_config", {
+  id: text("id")
+    .primaryKey()
+    . $defaultFn(() => createId()),
+  founderId: text("founder_id").references(() => users.id),
+  consumerKey: text("consumer_key"),
+  consumerSecret: text("consumer_secret"),
+  shortcode: text("shortcode"),
+  passkey: text("passkey"),
+  environment: varchar("environment", { length: 20 }).default("sandbox"),
+  isConfigured: boolean("is_configured").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type MpesaConfig = typeof mpesaConfig.$inferSelect;

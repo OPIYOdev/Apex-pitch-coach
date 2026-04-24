@@ -14,5 +14,7 @@
     "api/index.ts": {
       "includeFiles": "server/**"
     }
-  }
+  },
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist"
 }
