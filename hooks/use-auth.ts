@@ -59,14 +59,31 @@ export function useAuth(options?: UseAuthOptions) {
         return;
       }
 
-      // Use cached user info for native (token validates the session)
-      const cachedUser = await Auth.getUserInfo();
-      console.log("[useAuth] Cached user:", cachedUser);
-      if (cachedUser) {
-        console.log("[useAuth] Using cached user info");
-        setUser(cachedUser);
+      // Always validate the session token against the server for native clients.
+      // Trusting only the local cache without server-side verification allows a
+      // stale or tampered cache entry to grant access after a token has been
+      // revoked or expired.
+      console.log("[useAuth] Native: validating session token with server...");
+      const serverUser = await Api.getMe();
+      console.log("[useAuth] Server validation result:", serverUser);
+      if (serverUser) {
+        const userInfo: Auth.User = {
+          id: serverUser.id,
+          openId: serverUser.openId,
+          name: serverUser.name,
+          email: serverUser.email,
+          loginMethod: serverUser.loginMethod,
+          lastSignedIn: new Date(serverUser.lastSignedIn),
+        };
+        setUser(userInfo);
+        // Refresh the local cache with the latest server-side data.
+        await Auth.setUserInfo(userInfo);
+        console.log("[useAuth] Native user validated and cache refreshed:", userInfo);
       } else {
-        console.log("[useAuth] No cached user, setting user to null");
+        // Token is invalid or expired — clear local state.
+        console.log("[useAuth] Native: server rejected token, clearing session");
+        await Auth.removeSessionToken();
+        await Auth.clearUserInfo();
         setUser(null);
       }
     } catch (err) {
@@ -104,18 +121,10 @@ export function useAuth(options?: UseAuthOptions) {
         console.log("[useAuth] Web: fetching user from API...");
         fetchUser();
       } else {
-        // Native: check for cached user info first for faster initial load
-        Auth.getUserInfo().then((cachedUser) => {
-          console.log("[useAuth] Native cached user check:", cachedUser);
-          if (cachedUser) {
-            console.log("[useAuth] Native: setting cached user immediately");
-            setUser(cachedUser);
-            setLoading(false);
-          } else {
-            // No cached user, check session token
-            fetchUser();
-          }
-        });
+        // Native: always run a full server-side validation via fetchUser.
+        // We no longer short-circuit on cached data alone because the cache
+        // cannot detect token revocation or expiry.
+        fetchUser();
       }
     } else {
       console.log("[useAuth] autoFetch disabled, setting loading to false");

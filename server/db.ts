@@ -1,15 +1,28 @@
+/**
+ * Database access layer.
+ *
+ * Uses the unified PostgreSQL schema from drizzle/schema.ts.
+ * The mysql2 driver has been removed; all DB access goes through the
+ * `postgres` (node-postgres) driver.
+ */
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { type InsertUser, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+/**
+ * Lazily initialise the Drizzle instance.
+ * Returns null when DATABASE_URL is not set so that local tooling (linting,
+ * type-checking) can run without a live database connection.
+ */
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL, { max: 10 });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -17,6 +30,26 @@ export async function getDb() {
   }
   return _db;
 }
+
+/**
+ * Convenience proxy export for use in route files.
+ * Callers must ensure the server has started (and getDb() called) before use.
+ */
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+  get(_target, prop) {
+    const instance = _db;
+    if (!instance) {
+      throw new Error(
+        "[Database] Attempted to use db before it was initialised.",
+      );
+    }
+    return (instance as any)[prop];
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Auth helpers
+// ---------------------------------------------------------------------------
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -33,6 +66,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const values: InsertUser = {
       openId: user.openId,
     };
+
     const updateSet: Record<string, unknown> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
@@ -52,12 +86,14 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
     }
+
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
-      values.role = "admin";
-      updateSet.role = "admin";
+      // Auto-promote the owner to "founder" (which also grants admin access).
+      values.role = "founder";
+      updateSet.role = "founder";
     }
 
     if (!values.lastSignedIn) {
@@ -68,9 +104,14 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
+    // PostgreSQL upsert via onConflictDoUpdate
+    await db
+      .insert(users)
+      .values(values)
+      .onConflictDoUpdate({
+        target: users.openId,
+        set: updateSet,
+      });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -84,9 +125,11 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
 }
-
-// TODO: add feature queries here as your schema grows.

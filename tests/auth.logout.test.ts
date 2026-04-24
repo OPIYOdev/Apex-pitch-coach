@@ -14,12 +14,16 @@ function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] }
   const clearedCookies: CookieCall[] = [];
   
   const user: AuthenticatedUser = {
-    id: 1,
+    // id is now a CUID string (unified PostgreSQL schema)
+    id: "cltest0000000000000000000",
     openId: "sample-user",
     email: "sample@example.com",
     name: "Sample User",
     loginMethod: "manus",
     role: "user",
+    tokens: 0,
+    xp: 0,
+    level: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

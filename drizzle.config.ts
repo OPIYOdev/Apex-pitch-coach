@@ -6,9 +6,10 @@ if (!connectionString) {
 }
 
 export default defineConfig({
+  // Single unified schema — both auth and product domain tables live here.
   schema: "./drizzle/schema.ts",
   out: "./drizzle",
-  dialect: "mysql",
+  dialect: "postgresql",
   dbCredentials: {
     url: connectionString,
   },

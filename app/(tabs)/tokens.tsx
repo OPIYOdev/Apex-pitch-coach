@@ -1,6 +1,161 @@
-import { ScrollView, Text, View, TouchableOpacity, Alert } from "react-native";
-import { useState } from "react";
+import {
+  ScrollView,
+  Text,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
+import { trpc } from "@/lib/trpc";
 
-const TOKEN_PACKAGES = [\n  { id: 1, name: \"Starter\", tokens: 100, price: 200, priceDisplay: \"KES 200\" },\n  { id: 2, name: \"Builder\", tokens: 500, price: 800, priceDisplay: \"KES 800\" },\n  { id: 3, name: \"Pro\", tokens: 2000, price: 2500, priceDisplay: \"KES 2,500\" },\n];\n\nconst TRANSACTIONS = [\n  { id: 1, type: \"purchase\", amount: 100, reason: \"Token Purchase\", date: \"2024-04-20\", status: \"success\" },\n  { id: 2, type: \"deduct\", amount: 5, reason: \"Pitch Analysis\", date: \"2024-04-20\", status: \"completed\" },\n  { id: 3, type: \"deduct\", amount: 1, reason: \"Chat Message\", date: \"2024-04-19\", status: \"completed\" },\n];\n\nexport default function TokensScreen() {\n  const colors = useColors();\n  const [tokens, setTokens] = useState(50);\n  const [loading, setLoading] = useState(false);\n\n  const handlePurchase = (pkg: typeof TOKEN_PACKAGES[0]) => {\n    Alert.alert(\n      \"Purchase Tokens\",\n      `Buy ${pkg.tokens} tokens for ${pkg.priceDisplay}?\\n\\nPayment will be processed via M-Pesa.`,\n      [\n        { text: \"Cancel\", onPress: () => {}, style: \"cancel\" },\n        {\n          text: \"Continue\",\n          onPress: async () => {\n            setLoading(true);\n            try {\n              // Mock M-Pesa payment flow\n              await new Promise((resolve) => setTimeout(resolve, 2000));\n              setTokens(tokens + pkg.tokens);\n              Alert.alert(\"Success\", `${pkg.tokens} tokens added to your account!`);\n            } catch (error) {\n              Alert.alert(\"Error\", \"Payment failed. Please try again.\");\n            } finally {\n              setLoading(false);\n            }\n          },\n          style: \"default\",\n        },\n      ]\n    );\n  };\n\n  return (\n    <ScreenContainer className=\"p-4\">\n      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>\n        <View className=\"flex-1 gap-4\">\n          {/* Header */}\n          <View className=\"mb-2\">\n            <Text className=\"text-2xl font-bold text-foreground\">Token Balance</Text>\n            <Text className=\"text-sm text-muted\">Manage your pitch coaching credits</Text>\n          </View>\n\n          {/* Token Balance Card */}\n          <View\n            className=\"p-6 rounded-lg items-center gap-2\"\n            style={{ backgroundColor: colors.primary, opacity: 0.9 }}\n          >\n            <Text className=\"text-5xl font-bold text-white\">{tokens}</Text>\n            <Text className=\"text-white text-lg\">Available Tokens</Text>\n            <Text className=\"text-white text-xs opacity-80\">\n              Analyze: 5 • Chat: 1 • Voice: 3\n            </Text>\n          </View>\n\n          {/* Token Packages */}\n          <View className=\"gap-2\">\n            <Text className=\"text-lg font-bold text-foreground\">Buy Tokens</Text>\n            {TOKEN_PACKAGES.map((pkg) => (\n              <TouchableOpacity\n                key={pkg.id}\n                onPress={() => handlePurchase(pkg)}\n                disabled={loading}\n                className=\"p-4 border border-border rounded-lg flex-row items-center justify-between\"\n              >\n                <View>\n                  <Text className=\"text-base font-bold text-foreground\">{pkg.name}</Text>\n                  <Text className=\"text-sm text-muted\">{pkg.tokens} tokens</Text>\n                </View>\n                <View className=\"items-end\">\n                  <Text className=\"text-lg font-bold text-primary\">{pkg.priceDisplay}</Text>\n                  <Text className=\"text-xs text-muted\">via M-Pesa</Text>\n                </View>\n              </TouchableOpacity>\n            ))}\n          </View>\n\n          {/* Usage Breakdown */}\n          <View className=\"gap-2\">\n            <Text className=\"text-lg font-bold text-foreground\">Token Usage</Text>\n            <View className=\"gap-2\">\n              <View className=\"p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between\">\n                <View className=\"flex-row items-center gap-2\">\n                  <Text className=\"text-lg\">🎤</Text>\n                  <View>\n                    <Text className=\"text-sm font-semibold text-foreground\">Pitch Analysis</Text>\n                    <Text className=\"text-xs text-muted\">5 tokens per analysis</Text>\n                  </View>\n                </View>\n                <Text className=\"text-sm font-bold text-foreground\">5</Text>\n              </View>\n              <View className=\"p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between\">\n                <View className=\"flex-row items-center gap-2\">\n                  <Text className=\"text-lg\">💬</Text>\n                  <View>\n                    <Text className=\"text-sm font-semibold text-foreground\">Coach Chat</Text>\n                    <Text className=\"text-xs text-muted\">1 token per message</Text>\n                  </View>\n                </View>\n                <Text className=\"text-sm font-bold text-foreground\">1</Text>\n              </View>\n              <View className=\"p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between\">\n                <View className=\"flex-row items-center gap-2\">\n                  <Text className=\"text-lg\">🎙️</Text>\n                  <View>\n                    <Text className=\"text-sm font-semibold text-foreground\">Voice Session</Text>\n                    <Text className=\"text-xs text-muted\">3 tokens per session</Text>\n                  </View>\n                </View>\n                <Text className=\"text-sm font-bold text-foreground\">3</Text>\n              </View>\n            </View>\n          </View>\n\n          {/* Transaction History */}\n          <View className=\"gap-2\">\n            <Text className=\"text-lg font-bold text-foreground\">Recent Activity</Text>\n            <View className=\"gap-2\">\n              {TRANSACTIONS.map((tx) => (\n                <View\n                  key={tx.id}\n                  className=\"p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between\"\n                >\n                  <View>\n                    <Text className=\"text-sm font-semibold text-foreground\">{tx.reason}</Text>\n                    <Text className=\"text-xs text-muted\">{tx.date}</Text>\n                  </View>\n                  <Text\n                    className={`text-sm font-bold ${\n                      tx.type === \"purchase\" ? \"text-success\" : \"text-error\"\n                    }`}\n                  >\n                    {tx.type === \"purchase\" ? \"+\" : \"-\"}{tx.amount}\n                  </Text>\n                </View>\n              ))}\n            </View>\n          </View>\n\n          {/* Founder Note */}\n          <View className=\"p-3 bg-primary bg-opacity-10 rounded-lg\">\n            <Text className=\"text-xs text-primary font-semibold mb-1\">💡 Founder Access</Text>\n            <Text className=\"text-xs text-foreground\">\n              Founders get unlimited free tokens. Configure M-Pesa credentials in Settings to receive payments directly.\n            </Text>\n          </View>\n        </View>\n      </ScrollView>\n    </ScreenContainer>\n  );\n}\n
+export default function TokensScreen() {
+  // Live data from the server
+  const profileQuery = trpc.user.profile.useQuery();
+  const packagesQuery = trpc.user.tokenPackages.useQuery();
+  const transactionsQuery = trpc.user.transactions.useQuery({ limit: 10 });
+
+  const tokens = profileQuery.data?.tokens ?? 0;
+  const packages = packagesQuery.data ?? [];
+  const transactions = transactionsQuery.data ?? [];
+
+  const handlePurchase = (pkg: { id: string; name: string | null; tokens: number | null; priceKES: string | null }) => {
+    // M-Pesa STK Push is initiated server-side via /api/payment/initiate-mpesa.
+    // The frontend will need a phone number input and a tRPC mutation once
+    // the payment flow is fully wired. For now we surface a clear placeholder.
+    Alert.alert(
+      "Buy Tokens",
+      `M-Pesa payment for "${pkg.name}" (${pkg.tokens} tokens, KES ${pkg.priceKES}) will be implemented in the next phase.`,
+    );
+  };
+
+  return (
+    <ScreenContainer className="p-4">
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1 gap-4">
+          {/* Header */}
+          <View className="mb-2">
+            <Text className="text-2xl font-bold text-foreground">Token Balance</Text>
+            <Text className="text-sm text-muted">Manage your APEX tokens</Text>
+          </View>
+
+          {/* Balance Card */}
+          <View
+            className="p-6 rounded-2xl items-center gap-2"
+            style={{ backgroundColor: "#1a1a2e" }}
+          >
+            {profileQuery.isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text className="text-5xl font-bold text-white">{tokens}</Text>
+                <Text className="text-white text-lg">Available Tokens</Text>
+                <Text className="text-white text-xs opacity-80">
+                  Analyse: 5 • Chat: 1 • Voice: 3
+                </Text>
+              </>
+            )}
+          </View>
+
+          {/* Token Packages */}
+          <View className="gap-2">
+            <Text className="text-lg font-bold text-foreground">Buy Tokens</Text>
+            {packagesQuery.isLoading ? (
+              <ActivityIndicator />
+            ) : packages.length === 0 ? (
+              <Text className="text-sm text-muted">No packages available.</Text>
+            ) : (
+              packages.map((pkg) => (
+                <TouchableOpacity
+                  key={pkg.id}
+                  onPress={() => handlePurchase(pkg)}
+                  className="p-4 border border-border rounded-lg flex-row items-center justify-between"
+                >
+                  <View>
+                    <Text className="text-base font-bold text-foreground">{pkg.name}</Text>
+                    <Text className="text-sm text-muted">{pkg.tokens} tokens</Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-lg font-bold text-primary">KES {pkg.priceKES}</Text>
+                    <Text className="text-xs text-muted">via M-Pesa</Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+
+          {/* Usage Breakdown */}
+          <View className="gap-2">
+            <Text className="text-lg font-bold text-foreground">Token Usage</Text>
+            <View className="gap-2">
+              {[
+                { icon: "🎤", label: "Pitch Analysis", cost: "5 tokens per analysis", amount: 5 },
+                { icon: "💬", label: "Coach Chat", cost: "1 token per message", amount: 1 },
+                { icon: "🎙️", label: "Voice Session", cost: "3 tokens per session", amount: 3 },
+              ].map((item) => (
+                <View
+                  key={item.label}
+                  className="p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between"
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-lg">{item.icon}</Text>
+                    <View>
+                      <Text className="text-sm font-semibold text-foreground">{item.label}</Text>
+                      <Text className="text-xs text-muted">{item.cost}</Text>
+                    </View>
+                  </View>
+                  <Text className="text-sm font-bold text-foreground">{item.amount}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Transaction History */}
+          <View className="gap-2">
+            <Text className="text-lg font-bold text-foreground">Recent Activity</Text>
+            {transactionsQuery.isLoading ? (
+              <ActivityIndicator />
+            ) : transactions.length === 0 ? (
+              <Text className="text-sm text-muted">No transactions yet.</Text>
+            ) : (
+              <View className="gap-2">
+                {transactions.map((tx) => (
+                  <View
+                    key={tx.id}
+                    className="p-3 bg-surface border border-border rounded-lg flex-row items-center justify-between"
+                  >
+                    <View>
+                      <Text className="text-sm font-semibold text-foreground capitalize">
+                        {tx.reason?.replace(/_/g, " ") ?? tx.type}
+                      </Text>
+                      <Text className="text-xs text-muted">
+                        {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : ""}
+                      </Text>
+                    </View>
+                    <Text
+                      className={`text-sm font-bold ${
+                        tx.type === "purchase" ? "text-success" : "text-error"
+                      }`}
+                    >
+                      {tx.type === "purchase" ? "+" : "-"}
+                      {tx.amount}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Founder Note */}
+          <View className="p-3 bg-primary bg-opacity-10 rounded-lg">
+            <Text className="text-xs text-primary font-semibold mb-1">💡 Founder Access</Text>
+            <Text className="text-xs text-foreground">
+              Founders get unlimited free tokens. Configure M-Pesa credentials via environment
+              variables to receive payments directly.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </ScreenContainer>
+  );
+}

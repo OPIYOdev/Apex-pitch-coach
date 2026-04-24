@@ -1,56 +1,46 @@
-import { ScrollView, Text, View, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  ScrollView,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { trpc } from "@/lib/trpc";
 
 export default function ArenaScreen() {
   const colors = useColors();
   const [pitchText, setPitchText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [tokens, setTokens] = useState(50); // Mock token balance
-  const [feedback, setFeedback] = useState<any>(null);
 
-  const analyzePitch = async () => {
-    if (!pitchText.trim()) {
-      alert("Please enter a pitch");
-      return;
-    }
-
-    if (tokens < 5) {
-      alert("Insufficient tokens. Need 5 tokens to analyze.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Mock Grok API call - replace with real API when credentials are available
-      const mockFeedback = {
-        verdict: "Strong opening, but needs more emotional resonance.",
-        landed: "Clear problem statement and specific market focus.",
-        killed: "Weak call-to-action, no urgency created.",
-        scores: {
-          hook: 7,
-          clarity: 8,
-          pain: 6,
-          solutionFit: 7,
-          credibility: 6,
-          callToAction: 5,
-        },
-        overallScore: 6.5,
-        drill: "Practice opening with a 10-second story about a real customer's pain point.",
-        rewrite: "Instead of 'We solve invoicing problems,' try: 'Every day, freelancers waste 2 hours chasing payments. We cut that to 30 seconds.'",
-        nextLevel: "Move from explaining your solution to showing its impact through customer stories.",
-      };
-
-      setFeedback(mockFeedback);
-      setTokens(tokens - 5);
+  // Live data from the server
+  const profileQuery = trpc.user.profile.useQuery();
+  const analyzeMutation = trpc.pitch.analyze.useMutation({
+    onSuccess: () => {
+      // Refresh token balance after a successful analysis
+      profileQuery.refetch();
       setPitchText("");
-    } catch (error) {
-      console.error("Analysis error:", error);
-      alert("Failed to analyze pitch");
-    } finally {
-      setLoading(false);
+    },
+    onError: (err) => {
+      Alert.alert("Analysis Failed", err.message);
+    },
+  });
+
+  const tokens = profileQuery.data?.tokens ?? 0;
+  const levelName = profileQuery.data?.levelName ?? "Rookie";
+  const level = profileQuery.data?.level ?? 1;
+  const feedback = analyzeMutation.data?.feedback ?? null;
+  const loading = analyzeMutation.isPending;
+
+  const analyzePitch = () => {
+    if (!pitchText.trim()) {
+      Alert.alert("Empty Pitch", "Please enter a pitch before analysing.");
+      return;
     }
+    analyzeMutation.mutate({ pitchText });
   };
 
   return (
@@ -61,10 +51,14 @@ export default function ArenaScreen() {
           <View className="flex-row items-center justify-between mb-4">
             <View>
               <Text className="text-2xl font-bold text-foreground">APEX Arena</Text>
-              <Text className="text-sm text-muted">Level 1 • Rookie</Text>
+              <Text className="text-sm text-muted">
+                Level {level} • {levelName}
+              </Text>
             </View>
             <View className="bg-primary px-4 py-2 rounded-full">
-              <Text className="text-white font-semibold">{tokens} tokens</Text>
+              <Text className="text-white font-semibold">
+                {profileQuery.isLoading ? "…" : `${tokens} tokens`}
+              </Text>
             </View>
           </View>
 
@@ -74,7 +68,7 @@ export default function ArenaScreen() {
             <TextInput
               value={pitchText}
               onChangeText={setPitchText}
-              placeholder="Enter your pitch here... (or use voice input below)"
+              placeholder="Enter your pitch here… (or use voice input below)"
               placeholderTextColor={colors.muted}
               multiline
               numberOfLines={6}
@@ -99,7 +93,7 @@ export default function ArenaScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Analyze Button */}
+          {/* Analyse Button */}
           <TouchableOpacity
             onPress={analyzePitch}
             disabled={loading || pitchText.trim().length === 0}
@@ -112,7 +106,9 @@ export default function ArenaScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text className="text-white font-bold text-lg">Analyze Pitch (5 tokens)</Text>
+              <Text className="text-white font-bold text-lg">
+                Analyse Pitch (5 tokens)
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -138,14 +134,16 @@ export default function ArenaScreen() {
                             style={{ width: `${(value / 10) * 100}%` }}
                           />
                         </View>
-                        <Text className="text-sm font-bold text-foreground w-8">{value}/10</Text>
+                        <Text className="text-sm font-bold text-foreground w-8">
+                          {value}/10
+                        </Text>
                       </View>
                     </View>
                   ))}
                 </View>
               </View>
 
-              {/* Overall Score Ring */}
+              {/* Overall Score */}
               <View className="items-center py-4">
                 <View
                   className="w-24 h-24 rounded-full items-center justify-center"
@@ -171,7 +169,9 @@ export default function ArenaScreen() {
                 <Text className="text-sm font-bold text-yellow-800 dark:text-yellow-200">
                   Elite Rewrite
                 </Text>
-                <Text className="text-sm text-yellow-900 dark:text-yellow-100">{feedback.rewrite}</Text>
+                <Text className="text-sm text-yellow-900 dark:text-yellow-100">
+                  {feedback.rewrite}
+                </Text>
               </View>
 
               {/* Next Level */}
