@@ -1,8 +1,10 @@
 import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { AnimatedCard } from "@/components/animated-card";
 
 const DRILL_PROMPTS: Record<number, string[]> = {
   1: [
@@ -45,107 +47,208 @@ export default function LevelsScreen() {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View className="flex-1 gap-4">
           {/* Header */}
-          <View className="mb-2">
-            <Text className="text-2xl font-bold text-foreground uppercase tracking-tighter">The Ascent</Text>
-            <Text className="text-sm text-muted italic">"From Rookie to Elite. There is no middle ground."</Text>
-          </View>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <View className="mb-2">
+              <Text className="text-2xl font-bold text-foreground uppercase tracking-tighter">The Ascent</Text>
+              <Text className="text-sm text-muted italic">"From Rookie to Elite. There is no middle ground."</Text>
+            </View>
+          </motion.div>
 
           {/* Level Cards */}
           {levelsQuery.isLoading ? (
             <ActivityIndicator />
           ) : (
-            <View className="gap-3">
-              {levels.map((level) => (
-                <TouchableOpacity
+            <motion.div
+              className="gap-3"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
+            >
+              {levels.map((level, idx) => (
+                <motion.div
                   key={level.n}
-                  onPress={() => setSelectedLevel(level.n)}
-                  className={`p-4 rounded-xl border-2 ${
-                    selectedLevel === level.n
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-surface"
-                  } ${level.locked ? "opacity-40" : ""}`}
+                  variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    visible: { opacity: 1, x: 0 },
+                  }}
+                  whileHover={!level.locked ? { scale: 1.02, x: 4 } : {}}
+                  whileTap={!level.locked ? { scale: 0.98 } : {}}
                 >
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center gap-3">
-                      <View
-                        className="w-10 h-10 rounded-full items-center justify-center"
-                        style={{
-                          backgroundColor: level.locked ? colors.muted : colors.primary,
-                        }}
-                      >
-                        <Text className="text-sm font-black text-white">{level.n}</Text>
-                      </View>
-                      <View>
-                        <Text className="text-base font-black text-foreground uppercase tracking-tight">{level.name}</Text>
-                        <Text className="text-[10px] font-bold text-muted uppercase">
-                          {level.locked ? "RESTRICTED" : "ACTIVE STATUS"}
-                        </Text>
-                      </View>
-                    </View>
-                    {level.locked && <Text className="text-lg">🔒</Text>}
-                  </View>
-
-                  {/* XP Progress */}
-                  {!level.locked && (
-                    <View className="gap-1 mt-1">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-[9px] font-bold text-muted uppercase">ELITE XP</Text>
-                        <Text className="text-[9px] font-bold text-foreground">
-                          {level.xpCurrent} / {level.xpNeeded}
-                        </Text>
-                      </View>
-                      <View className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-                        <View
-                          className="h-full bg-primary"
+                  <TouchableOpacity
+                    onPress={() => !level.locked && setSelectedLevel(level.n)}
+                    className={`p-4 rounded-xl border-2 ${
+                      selectedLevel === level.n
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-surface"
+                    } ${level.locked ? "opacity-40" : ""}`}
+                  >
+                    <View className="flex-row items-center justify-between mb-2">
+                      <View className="flex-row items-center gap-3">
+                        <motion.div
+                          animate={
+                            selectedLevel === level.n
+                              ? { scale: [1, 1.1, 1] }
+                              : { scale: 1 }
+                          }
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="w-10 h-10 rounded-full items-center justify-center"
                           style={{
-                            width: `${(level.xpCurrent / level.xpNeeded) * 100}%`,
+                            backgroundColor:
+                              level.locked ? colors.muted : colors.primary,
                           }}
-                        />
+                        >
+                          <Text className="text-sm font-black text-white">{level.n}</Text>
+                        </motion.div>
+                        <View>
+                          <Text className="text-base font-black text-foreground uppercase tracking-tight">
+                            {level.name}
+                          </Text>
+                          <Text className="text-[10px] font-bold text-muted uppercase">
+                            {level.locked ? "RESTRICTED" : "ACTIVE STATUS"}
+                          </Text>
+                        </View>
                       </View>
+                      {level.locked && (
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Text className="text-lg">🔒</Text>
+                        </motion.div>
+                      )}
                     </View>
-                  )}
-                </TouchableOpacity>
+
+                    {/* XP Progress */}
+                    {!level.locked && (
+                      <motion.div
+                        className="gap-1 mt-1"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-[9px] font-bold text-muted uppercase">Elite XP</Text>
+                          <Text className="text-[9px] font-bold text-foreground">
+                            {level.xpCurrent} / {level.xpNeeded}
+                          </Text>
+                        </View>
+                        <View className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-primary"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(level.xpCurrent / level.xpNeeded) * 100}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                          />
+                        </View>
+                      </motion.div>
+                    )}
+                  </TouchableOpacity>
+                </motion.div>
               ))}
-            </View>
+            </motion.div>
           )}
 
           {/* Selected Level Details */}
-          {levels.length > 0 && selectedLevel && (
-            <View className="mt-2 p-5 bg-surface border border-border rounded-2xl gap-4 shadow-sm">
-              <View className="flex-row items-center gap-2">
-                <Text className="text-xl font-black text-foreground uppercase tracking-tighter">
-                  {levels[selectedLevel - 1]?.name}
-                </Text>
-                <View className="h-px flex-1 bg-border" />
-              </View>
-              
-              <Text className="text-sm text-foreground leading-relaxed font-medium">
-                {levels[selectedLevel - 1]?.desc}
-              </Text>
+          <AnimatePresence mode="wait">
+            {levels.length > 0 && selectedLevel && (
+              <motion.div
+                key={selectedLevel}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <AnimatedCard delay={0} variant="slideUp">
+                  <View className="mt-2 p-5 bg-surface border border-border rounded-2xl gap-4 shadow-sm">
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-xl font-black text-foreground uppercase tracking-tighter">
+                        {levels[selectedLevel - 1]?.name}
+                      </Text>
+                      <View className="h-px flex-1 bg-border" />
+                    </View>
 
-              {!levels[selectedLevel - 1]?.locked && (
-                <View className="gap-3 pt-2">
-                  <Text className="text-xs font-black text-primary uppercase tracking-widest">ACTIVE DRILLS</Text>
-                  <View className="gap-2">
-                    {(DRILL_PROMPTS[selectedLevel] ?? []).map((prompt, idx) => (
-                      <View
-                        key={idx}
-                        className="p-4 bg-background border border-border rounded-xl"
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <Text className="text-sm text-foreground leading-relaxed font-medium">
+                        {levels[selectedLevel - 1]?.desc}
+                      </Text>
+                    </motion.div>
+
+                    {!levels[selectedLevel - 1]?.locked && (
+                      <motion.div
+                        className="gap-3 pt-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
                       >
-                        <Text className="text-sm text-foreground font-medium leading-snug">"{prompt}"</Text>
-                      </View>
-                    ))}
+                        <Text className="text-xs font-black text-primary uppercase tracking-widest">
+                          Active Drills
+                        </Text>
+                        <motion.div
+                          className="gap-2"
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: {
+                              opacity: 1,
+                              transition: {
+                                staggerChildren: 0.05,
+                              },
+                            },
+                          }}
+                        >
+                          {(DRILL_PROMPTS[selectedLevel] ?? []).map((prompt, idx) => (
+                            <motion.div
+                              key={idx}
+                              variants={{
+                                hidden: { opacity: 0, x: -10 },
+                                visible: { opacity: 1, x: 0 },
+                              }}
+                              whileHover={{ x: 4, backgroundColor: "rgba(59, 130, 246, 0.05)" }}
+                              className="p-4 bg-background border border-border rounded-xl"
+                            >
+                              <Text className="text-sm text-foreground font-medium leading-snug">
+                                "{prompt}"
+                              </Text>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      </motion.div>
+                    )}
+
+                    {levels[selectedLevel - 1]?.locked && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="p-4 bg-muted/10 rounded-xl items-center"
+                      >
+                        <Text className="text-xs font-bold text-muted uppercase">
+                          Increase your APEX Score to unlock
+                        </Text>
+                      </motion.div>
+                    )}
                   </View>
-                </View>
-              )}
-              
-              {levels[selectedLevel - 1]?.locked && (
-                <View className="p-4 bg-muted/10 rounded-xl items-center">
-                  <Text className="text-xs font-bold text-muted uppercase">Increase your APEX Score to unlock</Text>
-                </View>
-              )}
-            </View>
-          )}
+                </AnimatedCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </View>
       </ScrollView>
     </ScreenContainer>
