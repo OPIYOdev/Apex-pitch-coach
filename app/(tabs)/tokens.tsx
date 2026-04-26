@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ScreenContainer } from "@/components/screen-container";
 import { trpc } from "@/lib/trpc";
 import { AnimatedCard } from "@/components/animated-card";
+import { Badge } from "@/components/badge";
+import { ProgressBar } from "@/components/progress-bar";
 
 export default function TokensScreen() {
   const [phoneNumber, setPhoneNumber] = useState("254");

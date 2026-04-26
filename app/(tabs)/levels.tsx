@@ -5,6 +5,8 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { AnimatedCard } from "@/components/animated-card";
+import { Badge } from "@/components/badge";
+import { ProgressBar } from "@/components/progress-bar";
 
 const DRILL_PROMPTS: Record<number, string[]> = {
   1: [

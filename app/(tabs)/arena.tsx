@@ -14,6 +14,8 @@ import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { AnimatedCard } from "@/components/animated-card";
 import { ScoreRing } from "@/components/score-ring";
+import { Badge } from "@/components/badge";
+import { ProgressBar } from "@/components/progress-bar";
 
 export default function ArenaScreen() {
   const colors = useColors();
@@ -218,13 +220,13 @@ export default function ArenaScreen() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 + idx * 0.05 }}
                           >
-                            <View className="flex-row items-center justify-between">
+                            <View className="flex-row items-center justify-between gap-2">
                               <View className="flex-1">
                                 <Text className="text-xs font-bold text-foreground capitalize">{key}</Text>
                               </View>
-                              <View className="flex-row items-center gap-2">
+                              <View className="flex-row items-center gap-2 flex-1">
                                 <motion.div
-                                  className="w-20 h-2 bg-border rounded-full overflow-hidden"
+                                  className="flex-1 h-2 bg-border rounded-full overflow-hidden"
                                   initial={{ width: 0 }}
                                   animate={{ width: "100%" }}
                                   transition={{ delay: 0.3 + idx * 0.05, duration: 0.5 }}
